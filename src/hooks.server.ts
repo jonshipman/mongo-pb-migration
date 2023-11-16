@@ -5,15 +5,19 @@ import { POCKETBASE_URL, MONGO_URL } from '$env/static/private';
 
 const allowedHeaders = ['retry-after', 'content-type'];
 
+const POCKETBASE_CLIENT = new Pocketbase(POCKETBASE_URL);
+const MONGO_CLIENT = new MongoClient(MONGO_URL);
+const MONGO_CONNECTION = MONGO_CLIENT.connect();
+
 export async function handle({ event, resolve }): Promise<Response> {
-	console.log('connecting to mongo...');
-	event.locals.mongo = new MongoClient(MONGO_URL);
-	await event.locals.mongo.connect();
-	console.log('...connected to mongo');
+	if (!event.locals.mongo) {
+		event.locals.mongo = MONGO_CLIENT;
+		await MONGO_CONNECTION;
+	}
 
 	event.locals.mongoWeather = event.locals.mongo.db().collection('weatherAlert');
 
-	event.locals.pb = new Pocketbase(POCKETBASE_URL);
+	event.locals.pb = POCKETBASE_CLIENT;
 	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
 
 	if (event.locals.pb.authStore.isValid) {
