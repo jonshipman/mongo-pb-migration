@@ -30,7 +30,10 @@ export async function handle({ event, resolve }): Promise<Response> {
 		filterSerializedResponseHeaders: (name) => allowedHeaders.includes(name)
 	});
 
-	response.headers.set('set-cookie', event.locals.pb.authStore.exportToCookie({ secure: true }));
+	response.headers.set(
+		'set-cookie',
+		event.locals.pb.authStore.exportToCookie({ secure: POCKETBASE_URL.startsWith('https') })
+	);
 
 	return response;
 }
